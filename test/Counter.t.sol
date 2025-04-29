@@ -11,6 +11,9 @@ import {BalanceDelta} from "v4-core/src/types/BalanceDelta.sol";
 import {PoolId, PoolIdLibrary} from "v4-core/src/types/PoolId.sol";
 import {CurrencyLibrary, Currency} from "v4-core/src/types/Currency.sol";
 import {PoolSwapTest} from "v4-core/src/test/PoolSwapTest.sol";
+
+import {IERC20} from "forge-std/interfaces/IERC20.sol";
+
 import {Counter} from "../src/Counter.sol";
 import {StateLibrary} from "v4-core/src/libraries/StateLibrary.sol";
 
@@ -36,8 +39,8 @@ contract CounterTest is Test, Fixtures {
         // creates the pool manager, utility routers, and test tokens
         deployFreshManagerAndRouters();
         deployMintAndApprove2Currencies();
-
         deployAndApprovePosm(manager);
+        deployAndApproveV4Router(manager);
 
         // Deploy the hook to an address with the correct flags
         address flags = address(
@@ -91,11 +94,20 @@ contract CounterTest is Test, Fixtures {
 
         // Perform a test swap //
         bool zeroForOne = true;
-        int256 amountSpecified = -1e18; // negative number indicates exact input swap!
-        BalanceDelta swapDelta = swap(key, zeroForOne, amountSpecified, ZERO_BYTES);
+        uint256 amountSpecified = 1e18;
+
+        BalanceDelta swapDelta = v4Router.swapExactTokensForTokens(
+            amountSpecified,
+            9e17,
+            zeroForOne,
+            key,
+            "",
+            address(this),
+            block.timestamp + 1
+        );
         // ------------------- //
 
-        assertEq(int256(swapDelta.amount0()), amountSpecified);
+        assertEq(int256(swapDelta.amount0()), -int256(amountSpecified));
 
         assertEq(hook.beforeSwapCount(poolId), 1);
         assertEq(hook.afterSwapCount(poolId), 1);

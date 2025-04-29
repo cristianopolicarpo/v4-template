@@ -10,3 +10,6 @@
 [submodule "lib/uniswap-hooks"]
 	path = lib/uniswap-hooks
 	url = https://github.com/openzeppelin/uniswap-hooks
+[submodule "lib/v4-router"]
+	path = lib/v4-router
+	url = https://github.com/cristianopolicarpo/v4-router

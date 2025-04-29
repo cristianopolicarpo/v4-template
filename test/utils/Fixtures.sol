@@ -17,6 +17,8 @@ import {IEIP712_v4} from "v4-periphery/src/interfaces/IEIP712_v4.sol";
 import {ERC721PermitHash} from "v4-periphery/src/libraries/ERC721PermitHash.sol";
 import {IPositionDescriptor} from "v4-periphery/src/interfaces/IPositionDescriptor.sol";
 import {IWETH9} from "v4-periphery/src/interfaces/external/IWETH9.sol";
+import {ISignatureTransfer} from "permit2/src/interfaces/ISignatureTransfer.sol";
+import {UniswapV4Router04} from "v4-router/src/UniswapV4Router04.sol";
 
 /// @notice A shared test contract that wraps the v4-core deployers contract and exposes basic liquidity operations on posm.
 contract Fixtures is Deployers, DeployPermit2 {
@@ -25,6 +27,7 @@ contract Fixtures is Deployers, DeployPermit2 {
     uint256 constant MAX_SLIPPAGE_REMOVE_LIQUIDITY = 0;
 
     IPositionManager posm;
+    UniswapV4Router04 v4Router;
 
     function deployAndApprovePosm(IPoolManager poolManager) public {
         deployPosm(poolManager);
@@ -37,6 +40,12 @@ contract Fixtures is Deployers, DeployPermit2 {
         posm = IPositionManager(
             new PositionManager(poolManager, permit2, 300_000, IPositionDescriptor(address(0)), IWETH9(address(0)))
         );
+    }
+
+    function deployAndApproveV4Router(IPoolManager poolManager) internal {
+        v4Router = new UniswapV4Router04(poolManager, ISignatureTransfer(address(permit2)));
+        IERC20(Currency.unwrap(currency0)).approve(address(v4Router), type(uint256).max);
+        IERC20(Currency.unwrap(currency1)).approve(address(v4Router), type(uint256).max);
     }
 
     function seedBalance(address to) internal {
